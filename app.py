@@ -1,6 +1,4 @@
-import os
-import sys
-import copy
+import os, time, sys, copy
 from flask import Flask, jsonify, request, abort
 app = Flask(__name__)
 
@@ -9,10 +7,10 @@ print "Number of arguments: ", len(sys.argv)
 print "The arguments are: " , str(sys.argv)
 
 # TO DO - Code:
-# - Read input arguments as path
+# * Read input arguments as path
 # - If input arguments are not given default to system path
-# - Detect changes in the file and recreate these lists
-# - Create function for initializing file objects and running when change is detected
+# * Detect changes in the file and recreate these lists
+# * Create function for initializing file objects and running when change is detected
 
 # To Do - Assignment:
 # - Write unit tests
@@ -21,91 +19,104 @@ print "The arguments are: " , str(sys.argv)
 # - Add instructions on /index
 # - Clean up code and comments
 
-passwdFileList = []
+passwdFilePath = ""
+groupFilePath = ""
 passwdUserList = []
-groupFileList = []
 groupEntryList = []
+passwdModTime = ""
+groupModTime = ""
 
-try:
-    passwdFilePath = sys.argv[1]
-except:
-    passwdFilePath = './etc/passwd.txt'
+def setFilePaths():
+    try:
+      passwdFilePath = sys.argv[1]
+    except:
+      passwdFilePath = './etc/passwd.txt'
 
-try:
-    groupFilePath = sys.argv[2]
-except:
-    groupFilePath = './etc/group.txt'
+    try:
+      groupFilePath = sys.argv[2]
+    except:
+      groupFilePath = './etc/group.txt'
 
-if os.path.isfile(passwdFilePath):
-  print "Passwd file path exists!"
-else:
-  print "ERROR: Entered passwd file was not found: " + passwdFilePath
+def updateFileLists():
+    '''
+      Creates the lists containing the passwd and group file's contents
+    '''
 
-if os.path.isfile(groupFilePath):
-  print "Group file path exists!"
-else:
-  print "ERROR: Entered group file was not found: " + groupFilePath
+    try:
 
-# Open passwd file as read only (Specified by 'r')
-try:
-  with open(passwdFilePath, 'r') as passwdFile:
-      lineNumber = 1
+      # Ensure the passwd file exists
+      if os.path.isfile(passwdFilePath):
 
-      # Create a list of lists with each sublist containing the necessary fields for a user
-      # Ex: [['root', 'x', '0', '0', 'root', '/root', '/bin/bash'], ['daemon', 'x', '1', '1', 'daemon', '/usr/sbin', '/bin/sh']]
-      passwdFileList = [line.lower().strip().split(':') for line in passwdFile]
+        # Update the time of last modification of path. The return value is a number giving the number of
+        # seconds since the epoch (see the time module)
+        passwdModTime = os.path.getmtime(passwdFilePath)
 
-      # **Note** Typically an etc/passwd.txt file contains 7 entries per user: user name, placeholder for password information,
-      # user ID number (UID), user's group ID number (GID), comment field, user home directory, and login shell.
-      # This project will expect a typical passwd file as input, but will NOT return the placeholder for password information
-      # as specified by the coding challenge instructions, so only 6 fields will be displayed
-      for user in passwdFileList:
-        if len(user) != 7:
-          print "ERROR: Malformed passwd file - Incorrect number of fields detected for entry on line number " + str(lineNumber) + ": " + ":".join(user)
-          print "Each user entry should contain 7 fields: Username, Password Info, UID, GID, Comments, Home, Shell"
-          print "EX: root:x:0:0:root:/root:/bin/bash"
-          sys.exit()
+        # Open passwd file as read only (Specified by 'r')
+        with open(passwdFilePath, 'r') as passwdFile:
+            lineNumber = 1
 
-        # **Note** We are ignoring the encrypted password (user[1]) as per the instructions
-        passwdUserEntry = {"name": user[0], "uid": user[2], "gid": user[3], "comment": user[4], "home": user[5], "shell": user[6]}
-        passwdUserList.append(passwdUserEntry)
-        lineNumber += 1
-except IOError as err:
-    print "ERROR: Could not read passwd file:", passwdFilePath, "\nException:", err.args
-    sys.exit()
+            # Create a list of lists with each sublist containing the necessary fields for a user
+            # Ex: [['root', 'x', '0', '0', 'root', '/root', '/bin/bash'], ['daemon', 'x', '1', '1', 'daemon', '/usr/sbin', '/bin/sh']]
+            passwdFileList = [line.lower().strip().split(':') for line in passwdFile]
 
+            # **Note** Typically an etc/passwd.txt file contains 7 entries per user: user name, placeholder for password information,
+            # user ID number (UID), user's group ID number (GID), comment field, user home directory, and login shell.
+            # This project will expect a typical passwd file as input, but will NOT return the placeholder for password information
+            # as specified by the coding challenge instructions, so only 6 fields will be displayed
+            for user in passwdFileList:
+              if len(user) != 7:
+                print "ERROR: Malformed passwd file - Incorrect number of fields detected for entry on line number " + str(lineNumber) + ": " + ":".join(user)
+                print "Each user entry should contain 7 fields: Username, Password Info, UID, GID, Comments, Home, Shell"
+                print "EX: root:x:0:0:root:/root:/bin/bash"
+                sys.exit()
 
-# Open group file as read only (Specified by 'r')
-try:
-  with open(groupFilePath, 'r') as groupFile:
-      lineNumber = 1
+              # **Note** We are ignoring the encrypted password (user[1]) as per the instructions
+              passwdUserEntry = {"name": user[0], "uid": user[2], "gid": user[3], "comment": user[4], "home": user[5], "shell": user[6]}
+              passwdUserList.append(passwdUserEntry)
+              lineNumber += 1
+    except IOError as err:
+        print "ERROR: Could not read passwd file:", passwdFilePath, "\nException:", err.args
+        sys.exit()
 
-      # Create a list of lists with each sublist containing the necessary fields for a group
-      # Ex: [['dialout', 'x', '20', 'username'], ['cdrom', 'x', '24', 'username, username1']]
-      groupFileList = [line.lower().strip().split(':') for line in groupFile]
+    try:
 
-      # **Note** Typically an etc/group.txt file contains 4 entries per user: Group Name, Password, Group ID, and Group List
-      # This project will expect a typical group file as input, but will NOT return the
-      # password as specified by the coding challenge instructions, so only 3 fields will be displayed
-      for group in groupFileList:
-        if len(group) != 4:
-          print "ERROR: Malformed group file - Incorrect number of fields detected for entry on line number " + str(lineNumber) + ": " + ":".join(group)
-          print "Each group entry should contain 4 fields: Group Name, Password Info, Group ID, and Group List"
-          print "EX: cdrom:x:24:username, username1"
-          sys.exit()
+      # Ensure the group file exists
+      if os.path.isfile(groupFilePath):
 
-        # How the members list is built:
-        # First remove all white spaces ( "".join(group[3].split()) ),
-        # change text to lower case ( .lower() ), strip leading and trailing whitespaces ( .lower().strip().split(',') ),
-        # then create a list seperating each element that has a comma inbetween ( .split(',') )
+        # Update the time of last modification of path. The return value is a number giving the number of
+        # seconds since the epoch (see the time module)
+        groupModTime = os.path.getmtime(groupFilePath)
 
-        # **Note** We are ignoring the encrypted password (user[1]) as per the instructions
-        groupEntry = {"name": group[0], "gid": group[2], "members": "".join(group[3].split()).lower().strip().split(',')}
-        groupEntryList.append(groupEntry)
-        lineNumber += 1
-except IOError as err:
-    print "ERROR: Could not read group file:", groupFilePath, "\nException:", err.args
-    sys.exit()
+        # Open group file as read only (Specified by 'r')
+        with open(groupFilePath, 'r') as groupFile:
+            lineNumber = 1
+
+            # Create a list of lists with each sublist containing the necessary fields for a group
+            # Ex: [['dialout', 'x', '20', 'username'], ['cdrom', 'x', '24', 'username, username1']]
+            groupFileList = [line.lower().strip().split(':') for line in groupFile]
+
+            # **Note** Typically an etc/group.txt file contains 4 entries per user: Group Name, Password, Group ID, and Group List
+            # This project will expect a typical group file as input, but will NOT return the
+            # password as specified by the coding challenge instructions, so only 3 fields will be displayed
+            for group in groupFileList:
+              if len(group) != 4:
+                print "ERROR: Malformed group file - Incorrect number of fields detected for entry on line number " + str(lineNumber) + ": " + ":".join(group)
+                print "Each group entry should contain 4 fields: Group Name, Password Info, Group ID, and Group List"
+                print "EX: cdrom:x:24:username, username1"
+                sys.exit()
+
+              # How the members list is built:
+              # First remove all white spaces ( "".join(group[3].split()) ),
+              # change text to lower case ( .lower() ), strip leading and trailing whitespaces ( .lower().strip().split(',') ),
+              # then create a list seperating each element that has a comma inbetween ( .split(',') )
+
+              # **Note** We are ignoring the encrypted password (user[1]) as per the instructions
+              groupEntry = {"name": group[0], "gid": group[2], "members": "".join(group[3].split()).lower().strip().split(',')}
+              groupEntryList.append(groupEntry)
+              lineNumber += 1
+    except IOError as err:
+        print "ERROR: Could not read group file:", groupFilePath, "\nException:", err.args
+        sys.exit()
 
 @app.route('/', methods=['GET'])
 def index():
@@ -113,11 +124,19 @@ def index():
 
 @app.route('/users', methods=['GET'])
 def get_users():
+
+    # Detect modifications made to our passwd file using the "time of last modification of path"
+    if passwdModTime != os.path.getmtime(passwdFilePath):
+      updateFileLists()
     # Returns users as a list of JSON objects
     return jsonify(passwdUserList)
 
 @app.route('/users/<string:uid>', methods=['GET'])
 def get_single_user(uid):
+
+    # Detect modifications made to our passwd file using the "time of last modification of path"
+    if passwdModTime != os.path.getmtime(passwdFilePath):
+      updateFileLists()
 
     # Iterate through our user list and return user info if the provided uid exists
     for userList in passwdUserList:
@@ -127,6 +146,11 @@ def get_single_user(uid):
 
 @app.route('/users/query', methods=['GET'])
 def get_users_query():
+
+    # Detect changes made to our passwd file using the "time of last modification of path"
+    if passwdModTime != os.path.getmtime(passwdFilePath):
+      updateFileLists()
+
     queryResult = []
     myQuery = {
       "name": request.args.get("name"),
@@ -162,10 +186,18 @@ def get_users_query():
 
 @app.route('/groups', methods=['GET'])
 def get_groups():
+
+    # Detect changes made to our group file using the "time of last modification of path"
+    if groupModTime != os.path.getmtime(groupFilePath):
+      updateFileLists()
     return jsonify(groupEntryList)
 
 @app.route('/groups/<string:gid>', methods=['GET'])
 def get_single_group(gid):
+
+    # Detect changes made to our group file using the "time of last modification of path"
+    if groupModTime != os.path.getmtime(groupFilePath):
+      updateFileLists()
 
     # Iterate through our user list and return group info if the provided gid exists
     for currentEntry in groupEntryList:
@@ -175,13 +207,17 @@ def get_single_group(gid):
 
 @app.route('/groups/query', methods=['GET'])
 def get_groups_query():
+
+    # Detect changes made to our group file using the "time of last modification of path"
+    if groupModTime != os.path.getmtime(groupFilePath):
+      updateFileLists()
+
     queryResult = []
     myQuery = {
       "name": request.args.get("name"),
       "gid": request.args.get("gid"),
       "member": request.args.getlist("member")
     }
-
     for groupEntry in groupEntryList:
 
       # Match name field
@@ -195,11 +231,12 @@ def get_groups_query():
         print "No gid!"
         continue # Return to loop "for groupEntry in groupEntryList:"
 
-      # match member fieldss
+      # Match member fields
+      # If both member lists are not empty
       if myQuery["member"] and groupEntry["members"]:
 
-        # A deep copy of the current member list. We can modify this without tampering with the original data
-        # We will remove a member from this list when a match is made so we don't double count
+        # tempGroupEntry is a deep copy of the current member list. We can modify this without tampering with the original data
+        # We will remove a member from tempGroupEntry when a match is made so we don't double count
         tempGroupEntry = copy.deepcopy(groupEntry["members"])
         expectedMatches = len(myQuery["member"])
         foundMatches = 0
@@ -210,7 +247,7 @@ def get_groups_query():
             tempGroupEntry.remove(currentMember)
             foundMatches += 1
           else:
-            break # Return to start of loop "for currentMember in myQuery["members"]"
+            break # If no match was made, stop searching the current groupRntry
 
         # If we did not find all members in this entry, go on to the next entry in groupEntryList
         if foundMatches != expectedMatches:
@@ -220,8 +257,10 @@ def get_groups_query():
       queryResult.append(groupEntry)
     return jsonify(queryResult) # End of "for groupEntry in groupEntryList:"
 
+# If this application is started directly, not imported
 if __name__ == '__main__':
+    setFilePaths()
+    updateFileLists()
 
-    # If this application is called directly, start in debug mode
-    # Run the app on port 1025 in debug mode
+    # Run the app at http://127.0.0.1:1025/ in debug mode.
     app.run(debug=True, port=1025, use_reloader=True)
