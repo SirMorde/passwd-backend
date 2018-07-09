@@ -1,49 +1,73 @@
-import os, time, sys, copy
+import os, time, sys, copy, platform
 from flask import Flask, jsonify, request, abort
 app = Flask(__name__)
 
-print "This is the name of the script: ", sys.argv[0]
-print "Number of arguments: ", len(sys.argv)
-print "The arguments are: " , str(sys.argv)
+# Debug:
+# print "This is the name of the script: ", sys.argv[0]
+# print "Number of arguments: ", len(sys.argv)
+# print "The arguments are: " , str(sys.argv)
 
 # TO DO - Code:
 # * Read input arguments as path
-# - If input arguments are not given default to system path
+# * If input arguments are not given default to system path
 # * Detect changes in the file and recreate these lists
 # * Create function for initializing file objects and running when change is detected
 
 # To Do - Assignment:
 # - Write unit tests
-# - Test on vagrant using curl
+# * Test on vagrant using curl
 # - Write Readme guide
 # - Add instructions on /index
-# - Clean up code and comments
-
-passwdFilePath = ""
-groupFilePath = ""
-passwdUserList = []
-groupEntryList = []
-passwdModTime = ""
-groupModTime = ""
+# * Clean up code and comments
 
 def setFilePaths():
+    '''
+    Set file paths for passwd and group files to be accessed by the web service.
+    Defaults to example file for Windows and Mac
+
+    '''
+
+    global passwdFilePath
+    passwdFilePath = ""
+    global groupFilePath
+    groupFilePath = ""
+
     try:
       passwdFilePath = sys.argv[1]
     except:
-      passwdFilePath = './etc/passwd.txt'
+
+      # Used for running on Windows & Mac using an example passwd.txt file since /etc/passwd doesn't exist
+      if "windows" or "darwin" in str(platform.system()).lower():
+        passwdFilePath = './etc/passwd.txt'
+      else:
+        passwdFilePath = "/etc/passwd"
 
     try:
       groupFilePath = sys.argv[2]
     except:
-      groupFilePath = './etc/group.txt'
+
+      # Used for running on Windows & Mac using an example group.txt file since /etc/passwd doesn't exist
+      if "windows" or "darwin" in str(platform.system()).lower():
+        groupFilePath = './etc/group.txt'
+      else:
+        groupFilePath = "/etc/group"
 
 def updateFileLists():
     '''
       Creates the lists containing the passwd and group file's contents
+
     '''
 
-    try:
+    global passwdUserList
+    passwdUserList = []
+    global groupEntryList
+    groupEntryList = []
+    global passwdModTime
+    passwdModTime = ""
+    global groupModTime
+    groupModTime = ""
 
+    try:
       # Ensure the passwd file exists
       if os.path.isfile(passwdFilePath):
 
@@ -74,12 +98,16 @@ def updateFileLists():
               passwdUserEntry = {"name": user[0], "uid": user[2], "gid": user[3], "comment": user[4], "home": user[5], "shell": user[6]}
               passwdUserList.append(passwdUserEntry)
               lineNumber += 1
-    except IOError as err:
-        print "ERROR: Could not read passwd file:", passwdFilePath, "\nException:", err.args
+      else:
+        print "ERROR: No such file or directory:", passwdFilePath
         sys.exit()
+    except IOError as err:
+
+      # Notice the syntax to concatenate using ','. This is important as concatenating wtih '+' may not work for different object types
+      print "ERROR: Could not read passwd file:", passwdFilePath, "\nException:", err.args
+      sys.exit()
 
     try:
-
       # Ensure the group file exists
       if os.path.isfile(groupFilePath):
 
@@ -114,9 +142,14 @@ def updateFileLists():
               groupEntry = {"name": group[0], "gid": group[2], "members": "".join(group[3].split()).lower().strip().split(',')}
               groupEntryList.append(groupEntry)
               lineNumber += 1
-    except IOError as err:
-        print "ERROR: Could not read group file:", groupFilePath, "\nException:", err.args
+      else:
+        print "ERROR: No such file or directory:", groupFilePath
         sys.exit()
+    except IOError as err:
+
+      # Notice the syntax to concatenate using ','. This is important as concatenating wtih '+' may not work for different object types
+      print "ERROR: Could not read group file:", groupFilePath, "\nException:", err.args
+      sys.exit()
 
 @app.route('/', methods=['GET'])
 def index():
@@ -124,33 +157,36 @@ def index():
 
 @app.route('/users', methods=['GET'])
 def get_users():
+    '''
+    Return a list of all users on the system, as defined in the /etc/passwd file.
+
+    '''
 
     # Detect modifications made to our passwd file using the "time of last modification of path"
     if passwdModTime != os.path.getmtime(passwdFilePath):
       updateFileLists()
+
     # Returns users as a list of JSON objects
     return jsonify(passwdUserList)
 
-@app.route('/users/<string:uid>', methods=['GET'])
-def get_single_user(uid):
-
-    # Detect modifications made to our passwd file using the "time of last modification of path"
-    if passwdModTime != os.path.getmtime(passwdFilePath):
-      updateFileLists()
-
-    # Iterate through our user list and return user info if the provided uid exists
-    for userList in passwdUserList:
-      if userList['uid'] == uid:
-        return jsonify(userList)
-    return "404 Not found"
-
 @app.route('/users/query', methods=['GET'])
 def get_users_query():
+    '''
+    Return a list of users matching all of the specified query fields. The bracket notation indicates that any of the
+    following query parameters may be supplied:
+    - name
+    - uid
+    - gid
+    - comment
+    - home
+    - shell
+    Only exact matches are supported.
+
+    '''
 
     # Detect changes made to our passwd file using the "time of last modification of path"
     if passwdModTime != os.path.getmtime(passwdFilePath):
       updateFileLists()
-
     queryResult = []
     myQuery = {
       "name": request.args.get("name"),
@@ -164,55 +200,93 @@ def get_users_query():
     # Note: "!=" used for exact match. "not in" could be used for partial match.
     for user in passwdUserList:
       if myQuery["name"] is not None and myQuery["name"].lower().strip() != user["name"].lower().strip():
-        print "No name!"
         continue
       if myQuery["uid"] is not None and myQuery["uid"].lower().strip() != user["uid"].lower().strip():
-        print "No uid!"
         continue
       if myQuery["gid"] is not None and myQuery["gid"].lower().strip() != user["gid"].lower().strip():
-        print "No gid!"
         continue
       if myQuery["comment"] is not None and myQuery["comment"].lower().strip() != user["comment"].lower().strip():
-        print "No comment!"
         continue
       if myQuery["home"] is not None and myQuery["home"].lower().strip() != user["home"].lower().strip():
-        print "No home!"
         continue
       if myQuery["shell"] is not None and myQuery["shell"].lower().strip() != user["shell"].lower().strip():
-        print "No shell!"
         continue
       queryResult.append(user)
     return jsonify(queryResult)
 
+@app.route('/users/<string:uid>', methods=['GET'])
+def get_single_user(uid):
+    '''
+    Return a single user with <uid>. Returns 404 if <uid> is not found
+
+    '''
+
+    # Detect modifications made to our passwd file using the "time of last modification of path"
+    if passwdModTime != os.path.getmtime(passwdFilePath):
+      updateFileLists()
+
+    # Iterate through our user list and return user info if the provided uid exists
+    for userList in passwdUserList:
+      if userList['uid'] == uid:
+        return jsonify(userList)
+    return abort(404)
+
+@app.route('/users/<string:uid>/groups', methods=['GET'])
+def get_single_user_groups(uid):
+    """
+    Return all the groups for a given user.
+    This implementation will find the name corresponding to the provided uid, then check each group's membership
+    to see if the current name can be found.
+
+    """
+
+    usersGroups = []
+
+    # Detect modifications made to our passwd and group file using the "time of last modification of path"
+    if passwdModTime != os.path.getmtime(passwdFilePath) or groupModTime != os.path.getmtime(groupFilePath):
+      updateFileLists()
+
+    # Iterate through our user list and see if the provided uid exists
+    for userList in passwdUserList:
+      if userList["uid"] == uid:
+
+        # If the uid exists, begin searching to see which groups the current user is in
+        for groupEntry in groupEntryList:
+
+          # If the current user's name is a member of the current group entry, add that group to the return list
+          if userList["name"] in groupEntry["members"]:
+            usersGroups.append(groupEntry)
+        return jsonify(usersGroups)
+    return abort(404)
+
 @app.route('/groups', methods=['GET'])
 def get_groups():
+    '''
+    Return a list of all groups on the system, a defined by /etc/group.
+
+    '''
 
     # Detect changes made to our group file using the "time of last modification of path"
     if groupModTime != os.path.getmtime(groupFilePath):
       updateFileLists()
     return jsonify(groupEntryList)
 
-@app.route('/groups/<string:gid>', methods=['GET'])
-def get_single_group(gid):
-
-    # Detect changes made to our group file using the "time of last modification of path"
-    if groupModTime != os.path.getmtime(groupFilePath):
-      updateFileLists()
-
-    # Iterate through our user list and return group info if the provided gid exists
-    for currentEntry in groupEntryList:
-      if currentEntry['gid'] == gid:
-        return jsonify(currentEntry)
-    return "404 Not found"
-
 @app.route('/groups/query', methods=['GET'])
 def get_groups_query():
+    '''
+    Return a list of groups matching all of the specified query fields. The bracket notation indicates that any of the
+    following query parameters may be supplied:
+    - name
+    - gid
+    - member (repeated)
+
+    '''
+
+    queryResult = []
 
     # Detect changes made to our group file using the "time of last modification of path"
     if groupModTime != os.path.getmtime(groupFilePath):
       updateFileLists()
-
-    queryResult = []
     myQuery = {
       "name": request.args.get("name"),
       "gid": request.args.get("gid"),
@@ -223,23 +297,21 @@ def get_groups_query():
       # Match name field
       # Note: "!=" used for exact match. "not in" could be used for partial match.
       if myQuery["name"] is not None and myQuery["name"].lower().strip() != groupEntry["name"].lower().strip():
-        print "No name!"
-        continue # Return to loop "for groupEntry in groupEntryList:"
+        continue # Return to start of the loop "for groupEntry in groupEntryList:"
 
       # Match gid field
       if myQuery["gid"] is not None and myQuery["gid"].lower().strip() != groupEntry["gid"].lower().strip():
-        print "No gid!"
-        continue # Return to loop "for groupEntry in groupEntryList:"
+        continue # Return to start of the loop "for groupEntry in groupEntryList:"
 
       # Match member fields
-      # If both member lists are not empty
+      # If both member lists are not empty. A non empty list will evaluate to "True"
       if myQuery["member"] and groupEntry["members"]:
+        foundMatches = 0
+        expectedMatches = len(myQuery["member"])
 
         # tempGroupEntry is a deep copy of the current member list. We can modify this without tampering with the original data
-        # We will remove a member from tempGroupEntry when a match is made so we don't double count
+        # We will remove a member from tempGroupEntry when a match is made so that we don't double count
         tempGroupEntry = copy.deepcopy(groupEntry["members"])
-        expectedMatches = len(myQuery["member"])
-        foundMatches = 0
         for currentMember in myQuery["member"]:
           if currentMember in tempGroupEntry:
 
@@ -247,15 +319,32 @@ def get_groups_query():
             tempGroupEntry.remove(currentMember)
             foundMatches += 1
           else:
-            break # If no match was made, stop searching the current groupRntry
+            break # If no match was made, stop searching the current groupEntry
 
-        # If we did not find all members in this entry, go on to the next entry in groupEntryList
+        # If we did not find all queried members in this entry, go on to the next entry in groupEntryList
         if foundMatches != expectedMatches:
           continue # Return to start of loop "for groupEntry in groupEntryList:"
-      else:
-        continue
+
+      # If the query passes each check, only then will we append it to our final result.
       queryResult.append(groupEntry)
     return jsonify(queryResult) # End of "for groupEntry in groupEntryList:"
+
+@app.route('/groups/<string:gid>', methods=['GET'])
+def get_single_group(gid):
+    '''
+    Return a single group with <gid>. Return 404 if <gid> is not found.
+
+    '''
+
+    # Detect changes made to our group file using the "time of last modification of path"
+    if groupModTime != os.path.getmtime(groupFilePath):
+      updateFileLists()
+
+    # Iterate through our user list and return group info if the provided gid exists
+    for currentEntry in groupEntryList:
+      if currentEntry['gid'] == gid:
+        return jsonify(currentEntry)
+    return abort(404)
 
 # If this application is started directly, not imported
 if __name__ == '__main__':

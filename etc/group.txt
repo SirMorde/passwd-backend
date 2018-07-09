@@ -2,11 +2,11 @@ root:x:0:username, username1
 daemon:x:1:
 bin:x:2:
 sys:x:3:
-adm:x:4:username
+adm:x:4:username, root
 tty:x:5:
-disk:x:6:
+disk:x:6:root
 lp:x:7:
-mail:x:8:
+mail:x:8:root
 news:x:9:
 uucp:x:10:
 man:x:12:
@@ -21,7 +21,7 @@ tape:x:26:
 sudo:x:27:
 audio:x:29:pulse
 dip:x:30:
-www-data:x:33:username
+www-data:x:33:username, root
 backup:x:34:
 operator:x:37:
 list:x:38:
@@ -34,9 +34,9 @@ video:x:44:
 sasl:x:45:
 plugdev:x:46:username
 staff:x:50:
-games:x:60:
+games:x:60:guest, root
 users:x:100:
 nogroup:x:65534:
 libuuid:x:101:
 crontab:x:102:
-syslog:x:103:username, username1
+syslog:x:103:username, username1, root
