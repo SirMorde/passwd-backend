@@ -195,7 +195,6 @@ python app.py <YOUR_PASSWD_FILE.TXT> <YOUR_GROUP_FILE.TXT>
 **_Example using the project directory's example passwd and group files:_** 
 ```
 python app.py ./etc/passwd.txt ./etc/group.txt
-
 ```
 
 ## Testing
