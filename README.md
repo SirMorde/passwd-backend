@@ -1,6 +1,19 @@
 # passwd-backend
 passwd-backend is a minimal HTTP service that exposes the user and group information on a UNIX-like system that is usually locked away in the UNIX /etc/passwd and /etc/groups files.
 
+Table of contents
+=================
+
+<!--ts-->
+   * [Requirements](#requirements)
+   * [Usage](#usage)
+   * [Installation](#installation)
+      * [Cloning the Git Repository](#cloning-the-git-repository)
+      * [Setting Up Your Virtual Environment](#setting-up-your-virtual-environment-optional)
+   * [Running the Service](#running-the-service)
+   * [Testing](#Testing)
+<!--te-->
+
 ## Requirements
 To use this project you will need the following prerequisites:
 + [Git](https://git-scm.com/downloads)
