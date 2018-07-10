@@ -206,8 +206,9 @@ python app.py ./etc/passwd.txt ./etc/group.txt
 ```
 
 ## Testing
-**Note: Before running the unit tests, you will need to have an instance of the service running.**
+**Note: If you are using a virtual environment, make sure to activate it before running these commands.**
 
+**Before running the unit tests, you will need to have an instance of the service running.**
 **You will want to start the service using the project's example passwd and group files when testing with the unit test as it checks for particular values in the API response.**
 
 ### Manual Testing with curl
