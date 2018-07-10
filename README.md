@@ -8,12 +8,12 @@ Table of contents
    * [Requirements](#requirements)
    * [API Resources](#api-resources)
       * [GET /users](#get-/users)
-      * [GET /users/query[?name=<nq>][&uid=<uq>][&gid=<gq>][&comment=<cq>][&home=<hq>][&shell=<sq>]](#get-/users/query[?name=<nq>][&uid=<uq>][&gid=<gq>][&comment=<cq>][&home=<hq>][&shell=<sq>])
-      * [GET /users/<uid>](#get-/users/<uid>)
-      * [GET /users/<uid>/groups](#get-/users/<uid>/groups)
+      * [GET /users/query[?name=\<nq\>][&uid=\<uq\>][&gid=\<gq\>][&comment=\<cq\>][&home=\<hq\>][&shell=\<sq\>]](#get-/users/query[?name=\<nq\>][&uid=\<uq\>][&gid=\<gq\>][&comment=\<cq\>][&home=\<hq\>][&shell=\<sq\>])
+      * [GET /users/\<uid\>](#get-/users/\<uid\>)
+      * [GET /users/\<uid\>/groups](#get-/users/<uid>/groups)
       * [GET /groups](#get-/groups)
-      * [GET /groups/query[?name=<nq>][&gid=<gq>][&member=<mq1>[&member=<mq2>][&...]]](#get-/groups/query[?name=<nq>][&gid=<gq>][&member=<mq1>[&member=<mq2>][&...]])
-      * [GET /groups/<gid>](#get-/groups/<gid>)
+      * [GET /groups/query[?name=\<nq\>][&gid=\<gq\>][&member=\<mq1\>[&member=\<mq2\>][&...]]](#get-/groups/query[?name=<nq>][&gid=<gq>][&member=<mq1>[&member=<mq2>][&...]])
+      * [GET /groups/\<gid\>](#get-/groups/<gid>)
    * [Installation](#installation)
       * [Cloning the Git Repository](#cloning-the-git-repository)
       * [Setting Up Your Virtual Environment](#setting-up-your-virtual-environment-optional)
@@ -44,7 +44,7 @@ Returns a list of all users on the system, as defined in the /etc/passwd file.
 ```
 
 
-### GET /users/query[?name=<nq>][&uid=<uq>][&gid=<gq>][&comment=<cq>][&home=<hq>][&shell=<sq>]
+### GET /users/query[?name=\<nq\>][&uid=\<uq\>][&gid=\<gq\>][&comment=\<cq\>][&home=\<hq\>][&shell=\<sq\>]
 Returns a list of users matching all of the specified query fields. The bracket notation indicates that any of the
 following query parameters may be supplied:
 - name
@@ -67,15 +67,15 @@ GET /users/query?shell=%2Fbin%2Ffalse
 ]
 ```
 
-### GET /users/<uid>
-Returns a single user with <uid>. Returns 404 if <uid> is not found.
+### GET /users/\<uid\>
+Returns a single user with \<uid\>. Returns 404 if \<uid\> is not found.
 
 **_Example Response:_**
 ```
 {“name”: “dwoodlins”, “uid”: 1001, “gid”: 1001, “comment”: “”, “home”:“/home/dwoodlins”, “shell”: “/bin/false”}
 ```
 
-### GET /users/<uid>/groups
+### GET /users/\<uid\>/groups
 Returns all the groups for a given user.
 
 **_Example Response:_**
@@ -96,7 +96,7 @@ Returns a list of all groups on the system, as defined by /etc/group.
 ]
 ```
 
-### GET /groups/query[?name=<nq>][&gid=<gq>][&member=<mq1>[&member=<mq2>][&...]]
+### GET /groups/query[?name=\<nq\>][&gid=\<gq\>][&member=\<mq1\>[&member=\<mq2\>][&...]]
 Returns a list of groups matching all of the specified query fields. The bracket notation indicates that any of the following query parameters may be supplied:
 - name
 - gid
@@ -115,8 +115,8 @@ GET /groups/query?member=_analyticsd&member=_networkd
 ]
 ```
 
-### GET /groups/<gid>
-Returns a single group with <gid>. Return 404 if <gid> is not found.
+### GET /groups/\<gid\>
+Returns a single group with \<gid\>. Return 404 if \<gid\> is not found.
 
 **_Example Response:_**
 ```
