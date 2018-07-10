@@ -1,5 +1,7 @@
 # passwd-backend
-passwd-backend is a minimal HTTP service that exposes the user and group information on a UNIX-like system that is usually locked away in the UNIX /etc/passwd and /etc/groups files.
+passwd-backend is a minimal HTTP service that exposes the user and group information on a UNIX-like system that is usually locked away in the UNIX /etc/passwd and /etc/groups files. 
+
+**Note:** This application was developed for Unix-like systems but can also be ran on Windows using the project's example passwd and group files. Unless otherwise specified below, the commands to be run on Windows are typically the same commands run on Linux.
 
 Table of contents
 =================
@@ -154,6 +156,11 @@ sudo virtualenv <YOUR_VENV_NAME> --always-copy
 sudo virtualenv venv_linux --always-copy
 ```
 
+On Windows:
+```
+virtualenv venv_windows
+```
+
 #### Activating Your Virtual Environment 
 **Note:** Activating your virtual environment will differ slightly for different operating systems. If you are having issues activating your virtual environment, refer to the [virtualenv user guide](https://virtualenv.pypa.io/en/stable/userguide/#activate-script)
 
@@ -167,8 +174,13 @@ To begin using your virtual environment and install Python packages in your virt
 . venv_linux/bin/activate
 ```
 
+On Windows:
+```
+venv_windows\Scripts\activate
+```
+
 #### Deactivating Your Virtual Environment 
-To stop using your virtual environment, you can deactivate it by running:
+To stop using your virtual environment, you can deactivate it by running (Same on Windows):
 ```
 deactivate
 ```
@@ -181,7 +193,7 @@ Once you have Python 2.7 installed, start a command prompt with administrator pr
 sudo -i
 ```
 
-Then navigate to the project directory and simply run the following command to download all dependencies automatically:
+Then navigate to the project directory and simply run the following command to download all dependencies automatically (Same on Windows):
 ```
 cd ..\passwd-backend
 pip install -r requirements.txt
@@ -278,6 +290,28 @@ Date: Tue, 10 Jul 2018 23:18:05 GMT
     "home": "/usr/sbin",
     "name": "daemon",
     "shell": "/bin/sh",
+    "uid": "1"
+  }
+]
+```
+
+On Windows:
+If you are running the application on Windows, you can enter the different service endpoints into your browser to see the API response:
+
+**_Example:_**
+```
+http://127.0.0.1:1025/users/query?gid=1
+```
+
+**_Example Response:_**
+```
+[
+  {
+    "comment": "daemon", 
+    "gid": "1", 
+    "home": "/usr/sbin", 
+    "name": "daemon", 
+    "shell": "/bin/sh", 
     "uid": "1"
   }
 ]
