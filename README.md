@@ -10,7 +10,7 @@ Table of contents
       * [GET /users](#get-users)
       * [GET /users/query[?name=\<nq\>][&uid=\<uq\>][&gid=\<gq\>][&comment=\<cq\>][&home=\<hq\>][&shell=\<sq\>]](#get-usersquerynamenquiduqgidgqcommentcqhomehqshellsq)
       * [GET /users/\<uid\>](#get-usersuid)
-      * [GET /users/\<uid\>/groups]()
+      * [GET /users/\<uid\>/groups](#get-usersuidgroups)
       * [GET /groups](#get-groups)
       * [GET /groups/query[?name=\<nq\>][&gid=\<gq\>][&member=\<mq1\>[&member=\<mq2\>][&...]]](#get-groupsquerynamenqgidgqmembermq1membermq2)
       * [GET /groups/\<gid\>](#get-groupsgid)
