@@ -2,3 +2,5 @@
 /venv_linux/*
 /server.bat
 /deploy/.vagrant/
+/.pytest_cache
+/tests/unit/.pytest_cache

@@ -1,0 +1,380 @@
+# To run this unit test you will need to install the following dependencies:
+# pip install pytest #https://docs.pytest.org/en/latest/getting-started.html
+# pip install requests
+# pip install pytest-curl-report #https://pypi.org/project/pytest-curl-report/
+# pip install tavern[pytest] #https://taverntesting.github.io/
+
+# Note: This test file will only be picked up by pytest if the name starts with test_ and ends with tavern.yaml
+# EX: test_<YOUR_FILE_NAME>.tavern.yaml
+
+# To run this test file, you can simply navigate to this repository and type pytest.
+# You can also specify the file name explicitly by navigating to ...\passwd-backend\tests\unit and running:
+# pytest test_passwd_backend.tavern.yml
+
+test_name: GET /users endpoint
+
+stages:
+  - name: Verify /users returns 200
+    request:
+      url: http://127.0.0.1:1025/users
+      method: GET
+    response:
+      status_code: 200
+
+---
+
+test_name: GET /users/query[?name=<nq>][&uid=<uq>][&gid=<gq>][&comment=<cq>][&home=<hq>][&shell=<sq>] endpoint
+
+stages:
+  - name: Verify name query
+    request:
+      url: http://127.0.0.1:1025/users/query?name=games
+      method: GET
+    response:
+      status_code: 200
+      body: [{
+          name: "games",
+          uid: !anything ,
+          gid: !anything ,
+          comment: !anything ,
+          home: !anything ,
+          shell: !anything
+        }
+      ]
+
+  - name: Verify uid query
+    request:
+      url: http://127.0.0.1:1025/users/query?uid=5
+      method: GET
+    response:
+      status_code: 200
+      body: [{
+          name: !anything ,
+          uid: "5",
+          gid: !anything ,
+          comment: !anything ,
+          home: !anything ,
+          shell: !anything
+        }
+      ]
+
+  - name: Verify gid query
+    request:
+      url: http://127.0.0.1:1025/users/query?gid=60
+      method: GET
+    response:
+      status_code: 200
+      body: [{
+          name: !anything ,
+          uid: !anything ,
+          gid: "60",
+          comment: !anything ,
+          home: !anything ,
+          shell: !anything
+        }
+      ]
+
+  - name: Verify comment query
+    request:
+      url: http://127.0.0.1:1025/users/query?comment=games
+      method: GET
+    response:
+      status_code: 200
+      body: [{
+          name: !anything ,
+          uid: !anything ,
+          gid: !anything ,
+          comment: "games",
+          home: !anything ,
+          shell: !anything
+        }
+      ]
+
+  - name: Verify home query
+    request:
+      url: http://127.0.0.1:1025/users/query?home=/usr/games
+      method: GET
+    response:
+      status_code: 200
+      body: [{
+          name: !anything ,
+          uid: !anything ,
+          gid: !anything ,
+          comment: !anything ,
+          home: "/usr/games",
+          shell: !anything
+        }
+      ]
+
+  # This test case can be problematic as the testing framework wants an exact number of objects returned in the list.
+  # In practice this causes issues since many entries can have the same "shell"
+  # This scenario assumes that there are no duplicate shells
+  - name: Verify shell query
+    request:
+      url: http://127.0.0.1:1025/users/query?shell=/bin/home
+      method: GET
+    response:
+      status_code: 200
+      body: [{
+          name: !anything ,
+          uid: !anything ,
+          gid: !anything ,
+          comment: !anything ,
+          home: !anything ,
+          shell: "/bin/home"
+        }
+      ]
+
+  - name: Verify all queries combined
+    request:
+      url: http://127.0.0.1:1025/users/query?name=games&uid=5&gid=60&comment=games&home=/usr/games&shell=/bin/home
+      method: GET
+    response:
+      status_code: 200
+      body: [{
+          name: "games",
+          uid: "5",
+          gid: "60",
+          comment: "games",
+          home: "/usr/games",
+          shell: "/bin/home"
+        }
+      ]
+
+  - name: Verify shell query using %2F as /
+    request:
+      url: http://127.0.0.1:1025/users/query?shell=%2Fbin%2Fhome
+      method: GET
+    response:
+      status_code: 200
+      body: [{
+          name: !anything ,
+          uid: !anything ,
+          gid: !anything ,
+          comment: !anything ,
+          home: !anything ,
+          shell: "/bin/home"
+        }
+      ]
+
+  - name: Verify all queries combined with unsupported query parameter returns 400
+    request:
+      url: http://127.0.0.1:1025/users/query?name=games&uid=5&gid=60&comment=games&home=/usr/games&shell=/bin/home&hello=world
+      method: GET
+    response:
+      status_code: 400
+
+  - name: Verify unsupported query parameter returns 400
+    request:
+      url: http://127.0.0.1:1025/users/query?hello=world
+      method: GET
+    response:
+      status_code: 400
+
+---
+
+test_name: GET /users/<uid> endpoint
+
+stages:
+
+  # Ignore json contents, only checks for properly formatted json response
+  # !anything will only match 1 value, not a dictionary/list as of version 0.7.0. Fixed in 0.8.0
+  - name: Verify single user endpoint
+    request:
+      url: http://127.0.0.1:1025/users/5
+      method: GET
+    response:
+      status_code: 200
+      body:
+        "name": !anything
+        "uid": !anything
+        "gid": !anything
+        "comment": !anything
+        "home": !anything
+        "shell": !anything
+
+  - name: Verify nonexistant user returns 404
+    request:
+      url: http://127.0.0.1:1025/users/9999999
+      method: GET
+    response:
+      status_code: 404
+
+---
+
+test_name: GET /groups/query[?name=<nq>][&gid=<gq>][&member=<mq1>[&member=<mq2>][&...]] endpoint
+
+stages:
+  - name: Verify name query
+    request:
+      url: http://127.0.0.1:1025/groups/query?name=games
+      method: GET
+    response:
+      status_code: 200
+
+      # This test case can be problematic as the testing framework will want an exact match.
+      # If the number of groups and members doesn't line up, this test case will fail.
+      # This scenario assumes that there are no duplicate group names
+      body: [{
+          name: !anything ,
+          gid: !anything ,
+          members: !anything
+      }
+      ]
+
+  - name: Verify unsupported query parameter returns 400
+    request:
+      url: http://127.0.0.1:1025/groups/query?hello=world
+      method: GET
+    response:
+      status_code: 400
+
+---
+
+test_name: GET /users/<uid>/groups endpoint
+
+stages:
+
+  # This test case can be problematic as the testing framework wants an exact number of objects returned in the list.
+  # In practice this causes issues since one user can be a part of several groups
+  # This scenario assumes that the user is only a part of one group
+  - name: Verify returns all the groups for a given user
+    request:
+      url: http://127.0.0.1:1025/users/105/groups
+      method: GET
+    response:
+      status_code: 200
+      body: [{
+            gid: !anything ,
+            members: !anything ,
+            name: !anything
+        }]
+
+  - name: Verify nonexistant user returns 404
+    request:
+      url: http://127.0.0.1:1025/users/9999999/groups
+      method: GET
+    response:
+      status_code: 404
+
+---
+
+test_name: GET /groups endpoint
+
+stages:
+  - name: Verify /groups returns 200
+    request:
+      url: http://127.0.0.1:1025/groups
+      method: GET
+    response:
+      status_code: 200
+
+---
+
+test_name: /groups/query[?name=<nq>][&gid=<gq>][&member=<mq1>[&member=<mq2>][&...]] endpoint
+
+stages:
+  - name: Verify name query
+    request:
+      url: http://127.0.0.1:1025/groups/query?name=games2
+      method: GET
+    response:
+      status_code: 200
+      body: [{
+          name: "games2",
+          gid: !anything ,
+          members: !anything
+        }
+      ]
+
+  - name: Verify gid query
+    request:
+      url: http://127.0.0.1:1025/groups/query?gid=70
+      method: GET
+    response:
+      status_code: 200
+      body: [{
+          name: !anything ,
+          gid: "70" ,
+          members: !anything
+        }
+      ]
+
+  - name: Verify member query with 1 members
+    request:
+      url: http://127.0.0.1:1025/groups/query?member=hello
+      method: GET
+    response:
+      status_code: 200
+      body: [{
+          name: !anything ,
+          gid: !anything ,
+          members: ["hello","world"]
+        }
+      ]
+
+  - name: Verify member query with 2 members
+    request:
+      url: http://127.0.0.1:1025/groups/query?member=hello&member=world
+      method: GET
+    response:
+      status_code: 200
+      body: [{
+          name: !anything ,
+          gid: !anything ,
+          members: ["hello","world"]
+        }
+      ]
+
+  - name: Verify all queries combined returns 400
+    request:
+      url: http://127.0.0.1:1025/groups/query?name=games2&gid=70&member=hello&member=world
+      method: GET
+    response:
+      status_code: 200
+      body: [{
+          name: "games2" ,
+          gid: "70" ,
+          members: ["hello","world"]
+        }
+      ]
+
+  - name: Verify all queries combined with unsupported query parameter returns 400
+    request:
+      url: http://127.0.0.1:1025/groups/query?name=games2&gid=70&member=hello&member=world&hello=world
+      method: GET
+    response:
+      status_code: 400
+
+  - name: Verify unsupported query parameter returns 400
+    request:
+      url: http://127.0.0.1:1025/groups/query?hello=world
+      method: GET
+    response:
+      status_code: 400
+
+---
+
+test_name: GET /groups/<gid> endpoint
+
+stages:
+
+  # Ignore json contents, only checks for properly formatted json response
+  # !anything will only match 1 value, not a dictionary/list as of version 0.7.0. Fixed in 0.8.0
+  - name: Verify groups/gid endpoint
+    request:
+      url: http://127.0.0.1:1025/groups/0
+      method: GET
+    response:
+      status_code: 200
+      body:
+        "name": !anything
+        "gid": !anything
+        "members": !anything
+
+  - name: Verify nonexistant gid returns 404
+    request:
+      url: http://127.0.0.1:1025/groups/9999999
+      method: GET
+    response:
+      status_code: 404

@@ -14,7 +14,7 @@ app = Flask(__name__)
 # * Create function for initializing file objects and running when change is detected
 
 # To Do - Assignment:
-# - Write unit tests
+# * Write unit tests
 # * Test on vagrant using curl
 # - Write Readme guide
 # - Add instructions on /index
@@ -34,23 +34,31 @@ def setFilePaths():
 
     try:
       passwdFilePath = sys.argv[1]
+      print "Entered passwd file: " + passwdFilePath
     except:
 
       # Used for running on Windows & Mac using an example passwd.txt file since /etc/passwd doesn't exist
-      if "windows" or "darwin" in str(platform.system()).lower():
+      # Also used for unit testing
+      if "windows" in str(platform.system()).lower() or "darwin" in str(platform.system()).lower():
         passwdFilePath = './etc/passwd.txt'
+        print "No passwd file provided... defaulting to example passwd file: " + passwdFilePath
       else:
         passwdFilePath = "/etc/passwd"
+        print "No passwd file provided... defaulting to system passwd file: " + passwdFilePath
 
     try:
       groupFilePath = sys.argv[2]
+      print "Entered group file: " + groupFilePath
     except:
 
       # Used for running on Windows & Mac using an example group.txt file since /etc/passwd doesn't exist
-      if "windows" or "darwin" in str(platform.system()).lower():
+      # Also used for unit testing
+      if "windows" in str(platform.system()).lower() or "darwin" in str(platform.system()).lower():
         groupFilePath = './etc/group.txt'
+        print "No group file provided... defaulting to example group file: " + groupFilePath
       else:
         groupFilePath = "/etc/group"
+        print "No group file provided... defaulting to system group file: " + groupFilePath
 
 def updateFileLists():
     '''
@@ -68,6 +76,7 @@ def updateFileLists():
     groupModTime = ""
 
     try:
+
       # Ensure the passwd file exists
       if os.path.isfile(passwdFilePath):
 
@@ -108,6 +117,7 @@ def updateFileLists():
       sys.exit()
 
     try:
+
       # Ensure the group file exists
       if os.path.isfile(groupFilePath):
 
@@ -137,9 +147,10 @@ def updateFileLists():
               # First remove all white spaces ( "".join(group[3].split()) ),
               # change text to lower case ( .lower() ), strip leading and trailing whitespaces ( .lower().strip().split(',') ),
               # then create a list seperating each element that has a comma inbetween ( .split(',') )
+              # Finally filter(None, myList) Removes all empty entries from the list
 
               # **Note** We are ignoring the encrypted password (user[1]) as per the instructions
-              groupEntry = {"name": group[0], "gid": group[2], "members": "".join(group[3].split()).lower().strip().split(',')}
+              groupEntry = {"name": group[0], "gid": group[2], "members": filter(None, "".join(group[3].split()).lower().strip().split(','))}
               groupEntryList.append(groupEntry)
               lineNumber += 1
       else:
@@ -196,6 +207,15 @@ def get_users_query():
       "home": request.args.get("home"),
       "shell": request.args.get("shell")
     }
+
+    acceptableArgs = ["name", "uid", "gid", "comment", "home", "shell"]
+
+    # Ensure that all of the query arguments the user provides are supported by the backend API
+    all_args = request.args.lists()
+    for requestArgs in all_args:
+        if requestArgs[0] not in acceptableArgs:
+            errorMessage = "Provided query not supported:" + str(requestArgs[0])
+            abort(400, errorMessage)
 
     # Note: "!=" used for exact match. "not in" could be used for partial match.
     for user in passwdUserList:
@@ -292,6 +312,19 @@ def get_groups_query():
       "gid": request.args.get("gid"),
       "member": request.args.getlist("member")
     }
+
+    acceptableArgs = ["name", "gid", "member"]
+
+    # Determines whether or not "member" was provided as a query
+    memberQuery = 0
+
+    # Ensure that all of the query arguments the user provides are supported by the backend API
+    all_args = request.args.lists()
+    for requestArgs in all_args:
+        if requestArgs[0] not in acceptableArgs:
+            errorMessage = "Provided query not supported:" + str(requestArgs[0])
+            abort(400, errorMessage)
+
     for groupEntry in groupEntryList:
 
       # Match name field
@@ -305,27 +338,30 @@ def get_groups_query():
 
       # Match member fields
       # If both member lists are not empty. A non empty list will evaluate to "True"
-      if myQuery["member"] and groupEntry["members"]:
+      if myQuery["member"]:
+        memberQuery = 1
         foundMatches = 0
         expectedMatches = len(myQuery["member"])
 
-        # tempGroupEntry is a deep copy of the current member list. We can modify this without tampering with the original data
-        # We will remove a member from tempGroupEntry when a match is made so that we don't double count
-        tempGroupEntry = copy.deepcopy(groupEntry["members"])
-        for currentMember in myQuery["member"]:
-          if currentMember in tempGroupEntry:
+        if groupEntry["members"]:
 
-            # Remove current member so we don't double count
-            tempGroupEntry.remove(currentMember)
-            foundMatches += 1
-          else:
-            break # If no match was made, stop searching the current groupEntry
+          # tempGroupEntry is a deep copy of the current member list. We can modify this without tampering with the original data
+          # We will remove a member from tempGroupEntry when a match is made so that we don't double count
+          tempGroupEntry = copy.deepcopy(groupEntry["members"])
+          for currentMember in myQuery["member"]:
+            if currentMember in tempGroupEntry:
+
+              # Remove current member so we don't double count
+              tempGroupEntry.remove(currentMember)
+              foundMatches += 1
+            else:
+              break # If no match was made, stop searching the current groupEntry
 
         # If we did not find all queried members in this entry, go on to the next entry in groupEntryList
-        if foundMatches != expectedMatches:
+        if foundMatches != expectedMatches and memberQuery == 1:
           continue # Return to start of loop "for groupEntry in groupEntryList:"
 
-      # If the query passes each check, only then will we append it to our final result.
+      # If the query passes each check, only then will we append it to our final result. Move on to the next groupEntry
       queryResult.append(groupEntry)
     return jsonify(queryResult) # End of "for groupEntry in groupEntryList:"
 

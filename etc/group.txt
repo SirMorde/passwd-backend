@@ -34,9 +34,10 @@ video:x:44:
 sasl:x:45:
 plugdev:x:46:username
 staff:x:50:
-games:x:60:guest, root
+games:x:60:guest, root, username1,,,,,username2, couchdb
 users:x:100:
 nogroup:x:65534:
 libuuid:x:101:
 crontab:x:102:
 syslog:x:103:username, username1, root
+games2:x:70:hello, world 
