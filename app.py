@@ -7,19 +7,6 @@ app = Flask(__name__)
 # print "Number of arguments: ", len(sys.argv)
 # print "The arguments are: " , str(sys.argv)
 
-# TO DO - Code:
-# * Read input arguments as path
-# * If input arguments are not given default to system path
-# * Detect changes in the file and recreate these lists
-# * Create function for initializing file objects and running when change is detected
-
-# To Do - Assignment:
-# * Write unit tests
-# * Test on vagrant using curl
-# - Write Readme guide
-# - Add instructions on /index
-# * Clean up code and comments
-
 def setFilePaths():
     '''
     Set file paths for passwd and group files to be accessed by the web service.
@@ -164,7 +151,7 @@ def updateFileLists():
 
 @app.route('/', methods=['GET'])
 def index():
-    return "Hello, World!"
+    return "Hello, World!\n"
 
 @app.route('/users', methods=['GET'])
 def get_users():
