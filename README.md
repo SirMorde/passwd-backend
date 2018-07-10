@@ -133,7 +133,7 @@ sudo git clone https://github.com/SirMorde/passwd-backend
 ```
 
 ### Setting Up Your Virtual Environment (Optional)
-**If you do not wish to set up a virtual environment, skip to the [Installing Dependencies](*installing-dependencies) section**
+**If you do not wish to set up a virtual environment, skip to the [Installing Dependencies](#installing-dependencies) section**
 
 For this project the Virtual Environment [**virtualenv**](https://virtualenv.pypa.io/en/stable/userguide/) was used. Refer to this [article](https://realpython.com/python-virtual-environments-a-primer/) on RealPython.com to learn more about what virtual environments are and why we should use them.
 
