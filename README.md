@@ -133,6 +133,8 @@ sudo git clone https://github.com/SirMorde/passwd-backend
 ```
 
 ### Setting Up Your Virtual Environment (Optional)
+**If you do not wish to set up a virtual environment, skip to the [Installing Dependencies](*installing-dependencies) section**
+
 For this project the Virtual Environment [**virtualenv**](https://virtualenv.pypa.io/en/stable/userguide/) was used. Refer to this [article](https://realpython.com/python-virtual-environments-a-primer/) on RealPython.com to learn more about what virtual environments are and why we should use them.
 
 To install Virtualenv run the following command:
@@ -174,12 +176,12 @@ deactivate
 ### Installing Dependencies
 **Note: If you are using a virtual environment, make sure to activate it before running this command.**
 
-Once you have Python 2.7 installed, start a command prompt with administrator priveleges by typing
+Once you have Python 2.7 installed, start a command prompt with administrator priveleges by typing:
 ```
 sudo -i
 ```
 
-Then navigate to the project directory and simply run the following command to download all dependencies automatically. 
+Then navigate to the project directory and simply run the following command to download all dependencies automatically:
 ```
 cd ..\passwd-backend
 pip install -r requirements.txt
