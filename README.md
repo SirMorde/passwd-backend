@@ -174,7 +174,7 @@ deactivate
 
 Once you have Python 2.7 installed, simply run the following command inside your project directory to download all dependencies automatically. 
 ```
-pip install -r requirements.txt
+sudo pip install -r requirements.txt
 ```
 
 ## Running the Service
