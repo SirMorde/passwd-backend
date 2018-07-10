@@ -187,6 +187,7 @@ python app.py
 On Linux, simply running this command with no input parameters to the application will make use of the system's /etc/passwd and /etc/group files. On Windows and Mac, this application will default to the project directory's example /etc/passwd.txt and /etc/group.txt files.
 
 Additionally the passwd and group files are configurable, meaning you can specify which passwd and group files you would like to use by passing them in as input parameters when calling the application. 
+
 **Note: The first input argument will always indicate the passwd file and second input argument will always indicate the group file.**
 ```
 python app.py <YOUR_PASSWD_FILE.TXT> <YOUR_GROUP_FILE.TXT>
