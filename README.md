@@ -23,6 +23,8 @@ Table of contents
       * [Installing Dependencies](#installing-dependencies)
    * [Running the Service](#running-the-service)
    * [Testing](#testing)
+      * [Manual Testing with curl](#manual-testing-with-curl)
+      * [Unit Testing with pytest](#unit-testing-with-pytest)
 <!--te-->
 
 ## Requirements
@@ -170,11 +172,17 @@ deactivate
 ```
 
 ### Installing Dependencies
-**Note: If you are using a virtual environment, make sure to activate it before running this command:**
+**Note: If you are using a virtual environment, make sure to activate it before running this command.**
 
-Once you have Python 2.7 installed, simply run the following command inside your project directory to download all dependencies automatically. 
+Once you have Python 2.7 installed, start a command prompt with administrator priveleges by typing
 ```
-sudo pip install -r requirements.txt
+sudo -i
+```
+
+Then navigate to the project directory and simply run the following command to download all dependencies automatically. 
+```
+cd ..\passwd-backend
+pip install -r requirements.txt
 ```
 
 ## Running the Service
@@ -198,10 +206,94 @@ python app.py ./etc/passwd.txt ./etc/group.txt
 ```
 
 ## Testing
-**Note: Before running the unit tests, you will need to have an instance of the service running. You will want to start the service using the project's example passwd and group files as the unit test checks for particular values in the API response.**
+**Note: Before running the unit tests, you will need to have an instance of the service running.**
 
+**You will want to start the service using the project's example passwd and group files when testing with the unit test as it checks for particular values in the API response.**
+
+### Manual Testing with curl
+Here are some example curl commands you can run to test different API endpoints manually
+
+**_Example 1:_**
+```
+curl -i "http://127.0.0.1:1025/users/1"
+```
+
+**_Example 1 Response:_**
+```
+HTTP/1.0 200 OK
+Content-Type: application/json
+Content-Length: 124
+Server: Werkzeug/0.14.1 Python/2.7.14
+Date: Tue, 10 Jul 2018 23:14:56 GMT
+
+{
+  "comment": "daemon",
+  "gid": "1",
+  "home": "/usr/sbin",
+  "name": "daemon",
+  "shell": "/bin/sh",
+  "uid": "1"
+}
+```
+
+**_Example 2:_**
+```
+curl -i "http://127.0.0.1:1025/groups/1"
+```
+
+**_Example 2 Response:_**
+```
+HTTP/1.0 200 OK
+Content-Type: application/json
+Content-Length: 56
+Server: Werkzeug/0.14.1 Python/2.7.14
+Date: Tue, 10 Jul 2018 23:15:52 GMT
+
+{
+  "gid": "1",
+  "members": [],
+  "name": "daemon"
+}
+```
+**_Example 3:_**
+```
+curl -i "http://127.0.0.1:1025/users/query?gid=1"
+```
+
+**_Example 3 Response:_**
+```
+HTTP/1.0 200 OK
+Content-Type: application/json
+Content-Length: 144
+Server: Werkzeug/0.14.1 Python/2.7.14
+Date: Tue, 10 Jul 2018 23:18:05 GMT
+
+[
+  {
+    "comment": "daemon",
+    "gid": "1",
+    "home": "/usr/sbin",
+    "name": "daemon",
+    "shell": "/bin/sh",
+    "uid": "1"
+  }
+]
+```
+
+### Unit Testing with pytest
 Navigate to ...\passwd-backend\tests\unit and then run the following command:
 ```
 pytest
 ```
-The unit test will make GET requests to the service and display the results.
+This will run our unit tests, which will test each of our API endpoints with GET requests and report the results.
+
+Pytest will automatically run any file beginning with "test_". In this case we only have test_passwd_backend.tavern.yaml. You could also explicitly run a specific test file using this command:
+```
+pytest <TEST_SOME_TEST_FILE.TAVERN.YAML>
+```
+
+**_Example:_**
+```
+pytest test_passwd_backend.tavern.yaml
+```
+
