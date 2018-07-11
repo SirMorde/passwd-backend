@@ -134,6 +134,11 @@ Once you have Git installed, clone this repository by running the following comm
 sudo git clone https://github.com/SirMorde/passwd-backend
 ```
 
+On Windows:
+```
+git clone https://github.com/SirMorde/passwd-backend
+```
+
 ### Setting Up Your Virtual Environment (Optional)
 **If you do not wish to set up a virtual environment, skip to the [Installing Dependencies](#installing-dependencies) section**
 
@@ -142,6 +147,11 @@ For this project the Virtual Environment [**virtualenv**](https://virtualenv.pyp
 To install Virtualenv run the following command:
 ```
 sudo pip install virtualenv 
+```
+
+On Windows:
+```
+pip install virtualenv 
 ```
 
 #### Creating Your Virtual Environment
@@ -192,6 +202,8 @@ Once you have Python 2.7 installed, start a command prompt with administrator pr
 ```
 sudo -i
 ```
+
+On Windows: Skip this step
 
 Then navigate to the project directory and simply run the following command to download all dependencies automatically (Same on Windows):
 ```
