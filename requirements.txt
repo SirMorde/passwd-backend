@@ -23,7 +23,7 @@ pytest==3.6.3
 pytest-curl-report==0.5.4
 python-box==3.2.0
 python-dateutil==2.7.3
-PyYAML==3.13
+PyYAML==4.2b1
 requests==2.20.0
 six==1.11.0
 stevedore==1.28.0
